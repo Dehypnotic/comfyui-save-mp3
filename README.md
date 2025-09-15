@@ -10,6 +10,8 @@ I felt the comfy-core node lacked some functionality so I made one with
 - Bitrate mode: variable, constant, average (libmp3lame)
 - Quality: low, medium, high (mapped per mode)
 - Audio output for preview
+
+...while keeping it as simple as possible. Preview with an external node. 
   
 ### Installation
 1) Open CMD in your ComfyUI `custom_nodes/` directory.
