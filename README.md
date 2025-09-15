@@ -1,6 +1,7 @@
 ## Save MP3 node for ComfyUI
 
-<img width="406" height="267" alt="image" src="https://github.com/user-attachments/assets/f28e22d6-074f-4917-9bdc-d65043302be1" />
+<img width="366" height="245" alt="image" src="https://github.com/user-attachments/assets/6fdae56c-6f65-4581-8af8-1b9e15d5b892" />
+
 
 Simple, flexible MP3 saver with bitrate options and handy path/filename templates.
 
