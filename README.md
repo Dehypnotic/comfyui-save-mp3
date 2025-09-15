@@ -12,7 +12,6 @@ Features
 - Bitrate mode: variable, constant, average
 - Quality: low, medium, high (mapped per mode)
 - Outputs: `AUDIO` and `STRING` (bitrate info summary)
-- Output node: can terminate a graph
 
 Installation
 1) Go to the `custom_nodes/` directory in ComfyUI.
