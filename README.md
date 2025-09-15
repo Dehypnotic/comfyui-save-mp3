@@ -11,7 +11,7 @@ Features
 - Filename prefix
 - Bitrate mode: variable, constant, average
 - Quality: low, medium, high (mapped per mode)
-- Outputs: `AUDIO` and `STRING` (bitrate info summary)
+- Outputs: `AUDIO` and `STRING` (bitrate info summary), output node compatible (can terminate a graph)
 
 Installation
 1) Go to the `custom_nodes/` directory in ComfyUI.
@@ -47,6 +47,20 @@ Examples
 - `audio/[time(%Y-%m-%d)]`
 - `runs/[model]/[datetime]`
 - `D:/Exports/[env(USERNAME)]/[guid]`
+
+Security and external save paths (ComfyUI Manager compliant)
+- By default, saving is allowed under ComfyUI’s `output/` directory.
+- To allow external locations (e.g., other drives), create a local JSON file next to this node named `save_mp3_allowed_paths.json` with:
+  ```json
+  { "allowed_roots": ["D:/AudioExports", "E:/TeamShare/Audio"] }
+  ```
+  Alternatively, set env var `SAVE_MP3_ALLOWED_PATHS` to point to the JSON file.
+- You can also place the file globally under your ComfyUI root:
+  - `<ComfyUI>/save_mp3_allowed_paths.json`
+  - `<ComfyUI>/config/save_mp3_allowed_paths.json`
+  - `<ComfyUI>/user/save_mp3_allowed_paths.json`
+  - `<ComfyUI>/user/config/save_mp3_allowed_paths.json`
+- The node refuses writes outside `output/` unless the path is under one of the whitelisted roots. Edit this file offline and restart ComfyUI.
 
 Notes
 - On Windows, prefer `%H-%M-%S` instead of `%H:%M:%S` in strftime patterns.

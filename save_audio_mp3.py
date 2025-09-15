@@ -8,6 +8,7 @@ import subprocess
 import typing as _t
 import re
 import uuid
+import json
 
 try:
     import numpy as np
@@ -406,6 +407,101 @@ class SaveAudioMP3Enhanced:
             return file_path
         return os.path.join(self._base_output_dir(), file_path)
 
+    # -------- Path whitelist helpers --------
+    def _comfy_root(self) -> str:
+        # Parent of output directory is ComfyUI root in typical setups
+        base = self._base_output_dir()
+        return os.path.abspath(os.path.join(base, os.pardir))
+
+    def _load_allowed_roots(self) -> _t.List[str]:
+        """Load external save roots from a local JSON file or env var.
+
+        This file must be edited offline by the user and is not exposed via UI.
+        Format example:
+        { "allowed_roots": ["D:/AudioExports", "E:/TeamShare/Audio"] }
+        """
+        # Env override may point to a JSON file
+        env_cfg = os.environ.get("SAVE_MP3_ALLOWED_PATHS")
+        candidates = []
+        if env_cfg:
+            candidates.append(env_cfg)
+        here = os.path.dirname(__file__)
+        for name in ("save_mp3_allowed_paths.json", "save-mp3-allowed-paths.json", "allowed_paths.json"):
+            candidates.append(os.path.join(here, name))
+
+        # Global locations under ComfyUI root
+        comfy_root = self._comfy_root()
+        global_names = (
+            "save_mp3_allowed_paths.json",
+            "save-mp3-allowed-paths.json",
+            "allowed_paths.json",
+        )
+        for name in global_names:
+            candidates.append(os.path.join(comfy_root, name))
+            candidates.append(os.path.join(comfy_root, "config", name))
+            candidates.append(os.path.join(comfy_root, "user", name))
+            candidates.append(os.path.join(comfy_root, "user", "config", name))
+
+        for path in candidates:
+            try:
+                if path and os.path.isfile(path):
+                    with open(path, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        roots = data.get("allowed_roots") or data.get("roots") or []
+                        if isinstance(roots, list):
+                            # Normalize and expand environment variables
+                            norm = []
+                            for r in roots:
+                                if not isinstance(r, str):
+                                    continue
+                                r = os.path.expandvars(r)
+                                r = os.path.expanduser(r)
+                                norm.append(os.path.abspath(r))
+                            return norm
+            except Exception:
+                # Ignore malformed files; treat as no whitelist
+                pass
+        return []
+
+    def _same_drive(self, a: str, b: str) -> bool:
+        da = os.path.splitdrive(os.path.abspath(a))[0].lower()
+        db = os.path.splitdrive(os.path.abspath(b))[0].lower()
+        return da == db
+
+    def _is_under_dir(self, path: str, base: str) -> bool:
+        try:
+            ap = os.path.abspath(path)
+            bb = os.path.abspath(base)
+            # On Windows, different drives raise ValueError in commonpath
+            if not self._same_drive(ap, bb):
+                return False
+            common = os.path.commonpath([ap, bb])
+            return common == bb
+        except Exception:
+            return False
+
+    def _validate_target_dir(self, target_dir: str) -> None:
+        base = self._base_output_dir()
+        if self._is_under_dir(target_dir, base):
+            return  # always allowed under ComfyUI output
+        # Otherwise require whitelist
+        allowed_roots = self._load_allowed_roots()
+        for root in allowed_roots:
+            if self._is_under_dir(target_dir, root):
+                return
+        # Not allowed
+        msg = (
+            "External save path is not allowed.\n"
+            "This node only writes inside ComfyUI's output directory, "
+            "unless the path is whitelisted offline.\n\n"
+            "To allow external locations, create a JSON file named "
+            "'save_mp3_allowed_paths.json' next to this node (or set env var "
+            "SAVE_MP3_ALLOWED_PATHS to point to it) with content like:\n\n"
+            "{\n  \"allowed_roots\": [\"D:/AudioExports\", \"E:/TeamShare/Audio\"]\n}\n\n"
+            "Then restart ComfyUI and try again."
+        )
+        raise PermissionError(msg)
+
     def _build_template_context(self, prompt, extra_pnginfo) -> dict:
         ctx = {
             "unix": str(int(time.time())),
@@ -494,6 +590,8 @@ class SaveAudioMP3Enhanced:
         filename_prefix = self._expand_path_templates(filename_prefix, context)
 
         target_dir = self._resolve_out_dir(file_path)
+        # Enforce ComfyUI Manager guideline: restrict external paths by offline whitelist
+        self._validate_target_dir(target_dir)
         _ensure_dir(target_dir)
 
         # Alltid lagre til angitt målmappe
