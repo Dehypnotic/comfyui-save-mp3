@@ -1,21 +1,29 @@
-Enhanced Save Audio (MP3) node for ComfyUI
+Save MP3 node for ComfyUI
 
-What this adds
-- Audio input: accepts common array formats used by audio nodes
-- File path: choose output subfolder or absolute path
-- Filename prefix: like the original node
+<img width="331" height="222" alt="image" src="https://github.com/user-attachments/assets/f5c17ac3-b3dc-4721-a133-1eaedc15a85a" />
+
+I felt the comfy-core node lacked some functionality so I made one with
+
+- Audio input: accepts common formats used by audio nodes
+- File path: choose output subfolder or absolute path on any drive
+- Filename prefix: like the comfy-core node
 - Bitrate mode: variable, constant, average (libmp3lame)
 - Quality: low, medium, high (mapped per mode)
+- Audio output for preview
   
 
 Installation
-1) Copy the `enhanced_save_audio_mp3` folder into your ComfyUI `custom_nodes/` directory.
-2) Backend options (no system install required):
+1) Open CMD in your ComfyUI `custom_nodes/` directory.
+2) Clone or copy
+   ´´´git clone https://github.com/Dehypnotic/comfyui-save-mp3.git´´´
+   
+   
+4) Backend options (no system install required):
    - Auto-download via imageio-ffmpeg: `pip install imageio-ffmpeg`. The first run downloads a static ffmpeg and caches it. No PATH changes needed.
    - Drop-in ffmpeg: place `ffmpeg.exe` (Windows) or `ffmpeg` (Linux/macOS) in `enhanced_save_audio_mp3/bin/`. The node will auto-detect it.
    - Or install `lameenc` via pip: `pip install lameenc`.
    - Or use a system-wide ffmpeg available on PATH (set `FFMPEG_PATH`/`FFMPEG_BINARY` to override).
-3) Restart ComfyUI.
+5) Restart ComfyUI.
 
 Node
 - Class name: `SaveAudioMP3Enhanced`
