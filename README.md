@@ -5,13 +5,15 @@
 I felt the comfy-core node lacked some functionality so I made one with...
 
 - Audio input: accepts common formats used by audio nodes
-- File path: choose output subfolder or absolute path on any drive
+- File path: choose ComfyUI output subfolder or absolute path on any drive
 - Filename prefix: like the comfy-core node
 - Bitrate mode: variable, constant, average (libmp3lame)
 - Quality: low, medium, high (mapped per mode)
-- Audio output for preview
 
-...while keeping it as simple as possible. Preview with an external node. 
+- Audio output for preview with external node
+- Bitrate info output
+
+...while keeping it as simple as possible. 
   
 ### Installation
 1) Open CMD in your ComfyUI `custom_nodes/` directory.
