@@ -54,7 +54,7 @@ Security and external save paths (ComfyUI Manager compliant)
   ```json
   { "allowed_roots": ["D:/AudioExports", "E:/TeamShare/Audio"] }
   ```
-  Alternatively, set env var `SAVE_MP3_ALLOWED_PATHS` to point to the JSON file.
+Alternatively (advanced): you can set the environment variable `SAVE_MP3_ALLOWED_PATHS` to point to the JSON file. This is optional — for most users it’s enough to place the JSON file next to the node or in one of the global ComfyUI locations listed below.
 - You can also place the file globally under your ComfyUI root:
   - `<ComfyUI>/save_mp3_allowed_paths.json`
   - `<ComfyUI>/config/save_mp3_allowed_paths.json`
