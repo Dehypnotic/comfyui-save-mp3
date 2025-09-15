@@ -390,7 +390,7 @@ class SaveAudioMP3Enhanced:
     RETURN_NAMES = ("audio", "bitrate_info")
     FUNCTION = "save"
     CATEGORY = "audio"
-    OUTPUT_NODE = False
+    OUTPUT_NODE = True
 
     def _base_output_dir(self) -> str:
         try:
