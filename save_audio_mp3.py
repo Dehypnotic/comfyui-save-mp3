@@ -6,6 +6,8 @@ import wave
 import shutil
 import subprocess
 import typing as _t
+import re
+import uuid
 
 try:
     import numpy as np
@@ -404,6 +406,64 @@ class SaveAudioMP3Enhanced:
             return file_path
         return os.path.join(self._base_output_dir(), file_path)
 
+    def _build_template_context(self, prompt, extra_pnginfo) -> dict:
+        ctx = {
+            "unix": str(int(time.time())),
+            "guid": uuid.uuid4().hex,
+            "uuid": uuid.uuid4().hex,
+            "model": "unknown",
+        }
+        # Try to glean a model name from extra_pnginfo or prompt if present
+        try:
+            if isinstance(extra_pnginfo, dict):
+                for k in ("model", "checkpoint", "ckpt_name", "model_name"):
+                    v = extra_pnginfo.get(k)
+                    if isinstance(v, str) and v:
+                        ctx["model"] = v
+                        break
+        except Exception:
+            pass
+        return ctx
+
+    def _expand_path_templates(self, text: str, context: dict | None = None) -> str:
+        """
+        Supports simple placeholders inside paths/prefixes:
+        - [time(%Y-%m-%d)] -> formatted current time via strftime
+        - [date] -> YYYY-MM-DD
+        - [datetime] -> YYYY-MM-DD_HH-MM-SS
+        - [unix] -> epoch seconds
+        - [guid] / [uuid] -> random UUID4 hex
+        - [model] -> model name if detectable, else 'unknown'
+        - [env(NAME)] -> environment variable NAME
+        Unknown or invalid formats fall back gracefully.
+        """
+        if not isinstance(text, str):
+            return text
+
+        ctx = context or {}
+
+        def repl_time(m):
+            fmt = m.group(1)
+            try:
+                return time.strftime(fmt)
+            except Exception:
+                return time.strftime("%Y%m%d_%H%M%S")
+
+        out = re.sub(r"\[time\((.*?)\)\]", repl_time, text)
+        out = out.replace("[date]", time.strftime("%Y-%m-%d"))
+        out = out.replace("[datetime]", time.strftime("%Y-%m-%d_%H-%M-%S"))
+        out = out.replace("[unix]", ctx.get("unix", str(int(time.time()))))
+        out = out.replace("[guid]", ctx.get("guid", uuid.uuid4().hex))
+        out = out.replace("[uuid]", ctx.get("uuid", uuid.uuid4().hex))
+        out = out.replace("[model]", ctx.get("model", "unknown"))
+
+        def repl_env(m):
+            name = m.group(1) or ""
+            return os.environ.get(name, "")
+
+        out = re.sub(r"\[env\((.*?)\)\]", repl_env, out)
+        return out
+
     def _try_rel_to_base(self, path: str) -> _t.Optional[str]:
         base = self._base_output_dir()
         try:
@@ -427,6 +487,11 @@ class SaveAudioMP3Enhanced:
     def save(self, audio, file_path, filename_prefix, bitrate_mode, quality,
              prompt=None, extra_pnginfo=None):
         pcm, sr = _normalize_audio_input(audio)
+
+        # Expand templates like [time(%Y-%m-%d)] plus [unix], [guid], [model], [env(NAME)]
+        context = self._build_template_context(prompt, extra_pnginfo)
+        file_path = self._expand_path_templates(file_path, context)
+        filename_prefix = self._expand_path_templates(filename_prefix, context)
 
         target_dir = self._resolve_out_dir(file_path)
         _ensure_dir(target_dir)
