@@ -15,8 +15,8 @@ I felt the comfy-core node lacked some functionality so I made one with...
 ...while keeping it as simple as possible. 
   
 ### Installation
-1) Open CMD in your ComfyUI `custom_nodes/` directory.
-2) Clone or copy
+1) Go to the `custom_nodes/` directory in ComfyUI.
+2) Clone or copy the `comfyui-save-mp3`-folder
    ```bashcd
    git clone https://github.com/Dehypnotic/comfyui-save-mp3.git
 3) Restart ComfyUI.
