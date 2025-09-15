@@ -446,7 +446,12 @@ class SaveAudioMP3Enhanced:
             try:
                 if path and os.path.isfile(path):
                     with open(path, "r", encoding="utf-8") as f:
-                        data = json.load(f)
+                        raw = f.read()
+                        # Support simple comment lines starting with '#'
+                        filtered = "\n".join(
+                            line for line in raw.splitlines() if not line.lstrip().startswith("#")
+                        )
+                        data = json.loads(filtered)
                         roots = data.get("allowed_roots") or data.get("roots") or []
                         if isinstance(roots, list):
                             # Normalize and expand environment variables
