@@ -17,7 +17,7 @@ I felt the comfy-core node lacked some functionality so I made one with...
 1) Open CMD in your ComfyUI `custom_nodes/` directory.
 2) Clone or copy
    ```bashcd
-   git clone https://github.com/Dehypnotic/comfyui-save-mp3.git´´´
+   git clone https://github.com/Dehypnotic/comfyui-save-mp3.git
 3) Restart ComfyUI.
 
 ### Bitrate/quality mapping
