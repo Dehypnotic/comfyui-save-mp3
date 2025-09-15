@@ -425,11 +425,8 @@ class SaveAudioMP3Enhanced:
         candidates = []
         if env_cfg:
             candidates.append(env_cfg)
-        here = os.path.dirname(__file__)
-        for name in ("save_mp3_allowed_paths.json", "save-mp3-allowed-paths.json", "allowed_paths.json"):
-            candidates.append(os.path.join(here, name))
 
-        # Global locations under ComfyUI root
+        # Prefer global locations under ComfyUI root (survive node updates)
         comfy_root = self._comfy_root()
         global_names = (
             "save_mp3_allowed_paths.json",
@@ -442,6 +439,11 @@ class SaveAudioMP3Enhanced:
             candidates.append(os.path.join(comfy_root, "user", name))
             candidates.append(os.path.join(comfy_root, "user", "config", name))
 
+        # Finally check next to the node
+        here = os.path.dirname(__file__)
+        for name in ("save_mp3_allowed_paths.json", "save-mp3-allowed-paths.json", "allowed_paths.json"):
+            candidates.append(os.path.join(here, name))
+
         for path in candidates:
             try:
                 if path and os.path.isfile(path):
@@ -452,7 +454,9 @@ class SaveAudioMP3Enhanced:
                             line for line in raw.splitlines() if not line.lstrip().startswith("#")
                         )
                         data = json.loads(filtered)
-                        roots = data.get("allowed_roots") or data.get("roots") or []
+                        roots = data.get("allowed_roots") if isinstance(data, dict) else []
+                        if not roots and isinstance(data, dict):
+                            roots = data.get("roots") or []
                         if isinstance(roots, list):
                             # Normalize and expand environment variables
                             norm = []
@@ -462,7 +466,9 @@ class SaveAudioMP3Enhanced:
                                 r = os.path.expandvars(r)
                                 r = os.path.expanduser(r)
                                 norm.append(os.path.abspath(r))
-                            return norm
+                            # If this file defines at least one root, use it; otherwise keep searching
+                            if len(norm) > 0:
+                                return norm
             except Exception:
                 # Ignore malformed files; treat as no whitelist
                 pass
