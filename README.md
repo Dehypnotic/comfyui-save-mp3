@@ -1,36 +1,52 @@
 ## Save MP3 node for ComfyUI
 
-<img width="331" height="222" alt="image" src="https://github.com/user-attachments/assets/f5c17ac3-b3dc-4721-a133-1eaedc15a85a" />
+Simple, flexible MP3 saver with bitrate options and handy path/filename templates.
 
-I felt the comfy-core node lacked some functionality so I made one with...
-
+Features
 - Audio input: accepts common formats used by audio nodes
-- File path: choose ComfyUI output subfolder or absolute path on any drive
-- Filename prefix: like the comfy-core node
+- File path: ComfyUI output subfolder or absolute path (any drive)
+- Filename prefix
 - Bitrate mode: variable, constant, average
 - Quality: low, medium, high (mapped per mode)
-- Audio output for preview with external node
-- Bitrate info output
+- Outputs: `AUDIO` and `STRING` (bitrate info summary)
+- Output node: can terminate a graph
 
-...while keeping it as simple as possible. 
-  
-### Installation
+Installation
 1) Go to the `custom_nodes/` directory in ComfyUI.
-2) Clone or copy the `comfyui-save-mp3`-folder
-   ```bashcd
+2) Clone or copy the `comfyui-save-mp3` folder:
+   ```bash
    git clone https://github.com/Dehypnotic/comfyui-save-mp3.git
+   ```
 3) Restart ComfyUI.
 
-### Bitrate/quality mapping
-- Variable (VBR): high→`-q:a 0`, medium→`-q:a 4`, low→`-q:a 7`
-- Constant (CBR): high→`320k`, medium→`192k`, low→`128k`
-- Average (ABR): high→`256k`, medium→`192k`, low→`160k` (uses `-abr 1`)
+Optional backends (no system install required)
+- Auto-download ffmpeg: `pip install imageio-ffmpeg` (first run caches a static ffmpeg)
+- Drop-in ffmpeg: place `ffmpeg`/`ffmpeg.exe` in a `bin/` folder next to the node
+- Or install `lameenc`: `pip install lameenc`
 
-### Example
+Backend preference: uses ffmpeg when available; otherwise falls back to `lameenc`.
 
-<img width="937" height="550" alt="image" src="https://github.com/user-attachments/assets/daa7ebcf-b623-43d6-a6a2-163fa9e6bb0f" />
+Bitrate/quality mapping
+- Variable (VBR): high → `-q:a 0` (~245 kbps), medium → `-q:a 4` (~165 kbps), low → `-q:a 7` (~100 kbps)
+- Constant (CBR): high → `320k`, medium → `192k`, low → `128k`
+- Average (ABR): high → `256k`, medium → `192k`, low → `160k` (uses `-abr 1`)
 
-### Notes
-- Encoding uses lameenc (if installed) or ffmpeg. ffmpeg can be discovered via a bundled `bin/ffmpeg`, a system PATH, or auto-downloaded by `imageio-ffmpeg`.
-- If neither lameenc nor any ffmpeg is found, the node raises an error with guidance.
+Path and filename templates
+Placeholders supported in `file_path` and `filename_prefix`:
+- `[time(%Y-%m-%d)]` → formatted time (strftime)
+- `[date]` → `YYYY-MM-DD`
+- `[datetime]` → `YYYY-MM-DD_HH-MM-SS`
+- `[unix]` → epoch seconds
+- `[guid]` / `[uuid]` → random UUID4 hex
+- `[model]` → tries `extra_pnginfo` keys: `model`, `checkpoint`, `ckpt_name`, `model_name`; else `unknown`
+- `[env(NAME)]` → environment variable `NAME`
+
+Examples
+- `audio/[time(%Y-%m-%d)]`
+- `runs/[model]/[datetime]`
+- `D:/Exports/[env(USERNAME)]/[guid]`
+
+Notes
+- On Windows, prefer `%H-%M-%S` instead of `%H:%M:%S` in strftime patterns.
+- If neither ffmpeg nor lameenc is available, the node raises a clear error with install hints.
 
