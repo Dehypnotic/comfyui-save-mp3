@@ -9,7 +9,6 @@ I felt the comfy-core node lacked some functionality so I made one with...
 - Filename prefix: like the comfy-core node
 - Bitrate mode: variable, constant, average (libmp3lame)
 - Quality: low, medium, high (mapped per mode)
-
 - Audio output for preview with external node
 - Bitrate info output
 
