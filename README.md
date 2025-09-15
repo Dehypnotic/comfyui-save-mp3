@@ -11,19 +11,23 @@ I felt the comfy-core node lacked some functionality so I made one with
 - Quality: low, medium, high (mapped per mode)
 - Audio output for preview
   
-Installation
+### Installation
 1) Open CMD in your ComfyUI `custom_nodes/` directory.
 2) Clone or copy
    ```bashcd
    git clone https://github.com/Dehypnotic/comfyui-save-mp3.git´´´
 3) Restart ComfyUI.
 
-Bitrate/quality mapping
+### Bitrate/quality mapping
 - Variable (VBR): high→`-q:a 0`, medium→`-q:a 4`, low→`-q:a 7`
 - Constant (CBR): high→`320k`, medium→`192k`, low→`128k`
 - Average (ABR): high→`256k`, medium→`192k`, low→`160k` (uses `-abr 1`)
 
-Notes
+### Example
+
+<img width="937" height="550" alt="image" src="https://github.com/user-attachments/assets/daa7ebcf-b623-43d6-a6a2-163fa9e6bb0f" />
+
+### Notes
 - Encoding uses lameenc (if installed) or ffmpeg. ffmpeg can be discovered via a bundled `bin/ffmpeg`, a system PATH, or auto-downloaded by `imageio-ffmpeg`.
 - If neither lameenc nor any ffmpeg is found, the node raises an error with guidance.
 
