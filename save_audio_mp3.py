@@ -645,5 +645,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SaveAudioMP3Enhanced": "Save MP3",
+    "SaveAudioMP3Enhanced": "Save MP3 (Dehypnotic)",
 }
