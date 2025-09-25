@@ -31,7 +31,7 @@ except Exception:  # pragma: no cover
     imageio_ffmpeg = None  # type: ignore
 
 
-# --------------------------- utils ---------------------------
+# --------------------------- utils --------------------------- 
 
 def _ensure_dir(path: str) -> None:
     os.makedirs(path, exist_ok=True)
@@ -204,7 +204,7 @@ def _normalize_audio_input(audio: _t.Any) -> _t.Tuple["np.ndarray", int]:
 
         B = shapes[b_axis]
         if B > 1:
-            print(f"[SaveAudioMP3Enhanced] Advarsel: batch={B}, bruker batch[0].")
+            print(f"[SaveAudioMP3Enhanced] Advarsel: batch={{B}}, bruker batch[0].")
         # Ta batch 0
         slicer = [slice(None)] * 3
         slicer[b_axis] = 0
@@ -218,7 +218,7 @@ def _normalize_audio_input(audio: _t.Any) -> _t.Tuple["np.ndarray", int]:
         if arr.ndim != 2:
             arr = np.squeeze(arr)
         if arr.ndim != 2:
-            raise ValueError(f"Kunne ikke redusere batch-array til 2D. shape={arr.shape}")
+            raise ValueError(f"Kunne ikke redusere batch-array til 2D. shape={{arr.shape}}")
 
         h, w = arr.shape
         if min(h, w) <= 8:
@@ -229,7 +229,7 @@ def _normalize_audio_input(audio: _t.Any) -> _t.Tuple["np.ndarray", int]:
                 arr = arr.T
 
     else:
-        raise ValueError(f"Audio-array må være 1D, 2D eller 3D (med batch). Fikk shape={arr.shape}")
+        raise ValueError(f"Audio-array må være 1D, 2D eller 3D (med batch). Fikk shape={{arr.shape}}")
 
     # Begrens til mono/stereo for MP3
     if arr.shape[1] > 2:
@@ -237,6 +237,7 @@ def _normalize_audio_input(audio: _t.Any) -> _t.Tuple["np.ndarray", int]:
 
     pcm = _to_int16_pcm(arr)  # (T,C) int16 LE
     return pcm, int(sr)
+
 
 def _wav_bytes_from_pcm(pcm: "np.ndarray", sr: int) -> bytes:
     """
@@ -370,7 +371,7 @@ def _encode_mp3(pcm: "np.ndarray", sr: int, out_path: str,
     raise RuntimeError("Ingen MP3-backend funnet. Installer 'imageio-ffmpeg' eller 'lameenc'.")
 
 
-# --------------------------- ComfyUI node ---------------------------
+# --------------------------- ComfyUI node --------------------------- 
 
 class SaveAudioMP3Enhanced:
     """
@@ -414,34 +415,26 @@ class SaveAudioMP3Enhanced:
         return os.path.abspath(os.path.join(base, os.pardir))
 
     def _load_allowed_roots(self) -> _t.List[str]:
-        """Load external save roots from a local JSON file or env var.
-
-        This file must be edited offline by the user and is not exposed via UI.
-        Format example:
-        { "allowed_roots": ["D:/AudioExports", "E:/TeamShare/Audio"] }
-        """
-        # Env override may point to a JSON file
-        env_cfg = os.environ.get("SAVE_MP3_ALLOWED_PATHS")
+        """Load external save roots from a shared JSON file or env var."""
+        env_cfg = os.environ.get("DEHYPNOTIC_SAVE_ALLOWED_PATHS")
         candidates = []
         if env_cfg:
             candidates.append(env_cfg)
 
-        # Prefer global locations under ComfyUI root (survive node updates)
         comfy_root = self._comfy_root()
+        # Search in user/config folders first, then comfy root, then node folder
         global_names = (
-            "save_mp3_allowed_paths.json",
-            "save-mp3-allowed-paths.json",
+            "dehypnotic_save_allowed_paths.json",
             "allowed_paths.json",
         )
         for name in global_names:
-            candidates.append(os.path.join(comfy_root, name))
-            candidates.append(os.path.join(comfy_root, "config", name))
-            candidates.append(os.path.join(comfy_root, "user", name))
             candidates.append(os.path.join(comfy_root, "user", "config", name))
+            candidates.append(os.path.join(comfy_root, "user", name))
+            candidates.append(os.path.join(comfy_root, "config", name))
+            candidates.append(os.path.join(comfy_root, name))
 
-        # Finally check next to the node
         here = os.path.dirname(__file__)
-        for name in ("save_mp3_allowed_paths.json", "save-mp3-allowed-paths.json", "allowed_paths.json"):
+        for name in global_names:
             candidates.append(os.path.join(here, name))
 
         for path in candidates:
@@ -449,7 +442,6 @@ class SaveAudioMP3Enhanced:
                 if path and os.path.isfile(path):
                     with open(path, "r", encoding="utf-8") as f:
                         raw = f.read()
-                        # Support simple comment lines starting with '#'
                         filtered = "\n".join(
                             line for line in raw.splitlines() if not line.lstrip().startswith("#")
                         )
@@ -458,19 +450,10 @@ class SaveAudioMP3Enhanced:
                         if not roots and isinstance(data, dict):
                             roots = data.get("roots") or []
                         if isinstance(roots, list):
-                            # Normalize and expand environment variables
-                            norm = []
-                            for r in roots:
-                                if not isinstance(r, str):
-                                    continue
-                                r = os.path.expandvars(r)
-                                r = os.path.expanduser(r)
-                                norm.append(os.path.abspath(r))
-                            # If this file defines at least one root, use it; otherwise keep searching
+                            norm = [os.path.abspath(os.path.expandvars(r)) for r in roots if isinstance(r, str)]
                             if len(norm) > 0:
                                 return norm
             except Exception:
-                # Ignore malformed files; treat as no whitelist
                 pass
         return []
 
@@ -483,33 +466,32 @@ class SaveAudioMP3Enhanced:
         try:
             ap = os.path.abspath(path)
             bb = os.path.abspath(base)
-            # On Windows, different drives raise ValueError in commonpath
             if not self._same_drive(ap, bb):
                 return False
-            common = os.path.commonpath([ap, bb])
-            return common == bb
+            return os.path.commonpath([ap, bb]) == bb
         except Exception:
             return False
 
     def _validate_target_dir(self, target_dir: str) -> None:
-        base = self._base_output_dir()
-        if self._is_under_dir(target_dir, base):
-            return  # always allowed under ComfyUI output
-        # Otherwise require whitelist
+        """Raise PermissionError if target_dir is not in ComfyUI output or whitelisted."""
+        base_output = self._base_output_dir()
+        if self._is_under_dir(target_dir, base_output):
+            return
+
         allowed_roots = self._load_allowed_roots()
         for root in allowed_roots:
             if self._is_under_dir(target_dir, root):
                 return
-        # Not allowed
+
         msg = (
             "External save path is not allowed.\n"
             "This node only writes inside ComfyUI's output directory, "
             "unless the path is whitelisted offline.\n\n"
-            "To allow external locations, create a JSON file named "
-            "'save_mp3_allowed_paths.json' next to this node (or set env var "
-            "SAVE_MP3_ALLOWED_PATHS to point to it) with content like:\n\n"
-            "{\n  \"allowed_roots\": [\"D:/AudioExports\", \"E:/TeamShare/Audio\"]\n}\n\n"
-            "Then restart ComfyUI and try again."
+            "To allow external locations, create/edit a JSON file named "
+            "'dehypnotic_save_allowed_paths.json' in your ComfyUI root (or user/config) folder "
+            "with content like:\n\n"
+            '{\n  "allowed_roots": ["D:/AudioExports", "E:/TeamShare/Audio"]\n}\n\n'
+            "You can also set the DEHYPNOTIC_SAVE_ALLOWED_PATHS environment variable to point to this file."
         )
         raise PermissionError(msg)
 
@@ -556,7 +538,7 @@ class SaveAudioMP3Enhanced:
             except Exception:
                 return time.strftime("%Y%m%d_%H%M%S")
 
-        out = re.sub(r"\[time\((.*?)\)\]", repl_time, text)
+        out = re.sub(r"[[]time\[(.*?)\]\]", repl_time, text)
         out = out.replace("[date]", time.strftime("%Y-%m-%d"))
         out = out.replace("[datetime]", time.strftime("%Y-%m-%d_%H-%M-%S"))
         out = out.replace("[unix]", ctx.get("unix", str(int(time.time()))))
@@ -568,7 +550,7 @@ class SaveAudioMP3Enhanced:
             name = m.group(1) or ""
             return os.environ.get(name, "")
 
-        out = re.sub(r"\[env\((.*?)\)\]", repl_env, out)
+        out = re.sub(r"[[]env\[(.*?)\]\]", repl_env, out)
         return out
 
     def _try_rel_to_base(self, path: str) -> _t.Optional[str]:
@@ -633,7 +615,7 @@ class SaveAudioMP3Enhanced:
         info_lines.append("- low: 160 kbps")
         info_lines.append("")
         # mark the active selection
-        info_lines.append(f"Selected: mode={bitrate_mode}, quality={quality}")
+        info_lines.append(f"Selected: mode={{bitrate_mode}}, quality={{quality}}")
         bitrate_info = "\n".join(info_lines)
 
         # Returner AUDIO og tekst for visningsnode

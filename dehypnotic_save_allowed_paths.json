@@ -1,0 +1,6 @@
+# Whitelist for Dehypnotic's Save nodes (Image and Audio)
+# Add absolute root folders where saving is allowed outside ComfyUI/output.
+# Lines starting with '#' are treated as comments.
+# Example:
+# { "allowed_roots": ["D:/ImageExports", "E:/TeamShare/Assets"] }
+{ "allowed_roots": [] }
