@@ -50,7 +50,7 @@ Examples
 
 Security and external save paths (ComfyUI Manager compliant)
 - By default, saving is allowed under ComfyUI’s `output/` directory.
-- To allow external locations (e.g., other drives), create a local JSON file next to this node named `save_mp3_allowed_paths.json` with:
+- To allow external locations (e.g., other drives), create a local JSON file next to this node named `dehypnotic_save_allowed_paths.json` with:
   ```json
   { "allowed_roots": ["D:/AudioExports", "E:/TeamShare/Audio"] }
   ```
