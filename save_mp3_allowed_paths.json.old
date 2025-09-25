@@ -1,6 +1,0 @@
-# Whitelist for Save MP3 node
-# Add absolute root folders where saving is allowed outside ComfyUI/output.
-# Lines starting with '#' are treated as comments.
-# Example:
-# { "allowed_roots": ["D:/AudioExports", "E:/TeamShare/Audio"] }
-{ "allowed_roots": [] }
