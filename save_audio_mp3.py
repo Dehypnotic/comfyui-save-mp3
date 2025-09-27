@@ -384,6 +384,7 @@ class SaveAudioMP3Enhanced:
             "required": {
                 "audio": ("AUDIO",),
                 "file_path": ("STRING", {"default": "audio", "multiline": False}),
+                "subfolder": ("STRING", {"default": "[date]", "multiline": False}),
                 "filename_prefix": ("STRING", {"default": "ComfyUI", "multiline": False}),
                 "bitrate_mode": (["variable", "constant", "average"], {"default": "variable"}),
                 "quality": (["low", "medium", "high"], {"default": "high"}),
@@ -573,14 +574,19 @@ class SaveAudioMP3Enhanced:
             fname = f"{base}_{i}.mp3"
         return fname
 
-    def save(self, audio, file_path, filename_prefix, bitrate_mode, quality,
+    def save(self, audio, file_path, subfolder, filename_prefix, bitrate_mode, quality,
              prompt=None, extra_pnginfo=None):
         pcm, sr = _normalize_audio_input(audio)
 
         # Expand templates like [time(%Y-%m-%d)] plus [unix], [guid], [model], [env(NAME)]
         context = self._build_template_context(prompt, extra_pnginfo)
         file_path = self._expand_path_templates(file_path, context)
+        subfolder = self._expand_path_templates(subfolder, context)
         filename_prefix = self._expand_path_templates(filename_prefix, context)
+        
+        # Combine file_path and subfolder
+        if subfolder:
+            file_path = os.path.join(file_path, subfolder)
 
         target_dir = self._resolve_out_dir(file_path)
         # Enforce ComfyUI Manager guideline: restrict external paths by offline whitelist
