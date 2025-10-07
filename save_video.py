@@ -23,11 +23,11 @@ from typing import List, Optional, Tuple, Union
 import numpy as np
 
 try:
-    import imageio_ffmpeg
-except Exception as e:
-    raise ImportError(
-        "This node requires 'imageio-ffmpeg'. Install with: pip install imageio imageio-ffmpeg"
-    ) from e
+    import imageio_ffmpeg  # type: ignore
+    _IMAGEIO_FFMPEG_ERROR = None
+except Exception as exc:
+    imageio_ffmpeg = None  # type: ignore
+    _IMAGEIO_FFMPEG_ERROR = exc
 
 
 VALID_PRESETS = ("ultrafast","superfast","veryfast","faster","fast","medium","slow","slower","veryslow")
@@ -551,6 +551,15 @@ class SaveVideo:
         frames_dir="",
         frames_select="0",
     ):
+        if imageio_ffmpeg is None:
+            msg = (
+                "Save Video node requires 'imageio' and 'imageio-ffmpeg'. "
+                "Install with: pip install imageio imageio-ffmpeg."
+            )
+            if _IMAGEIO_FFMPEG_ERROR:
+                msg += f" Import error: {_IMAGEIO_FFMPEG_ERROR}"
+            raise RuntimeError(msg)
+
         frames = _normalize_frames(images)
         if not frames:
             raise ValueError("No frames provided.")
@@ -609,7 +618,7 @@ class SaveVideo:
             out_path = self._normalize_path(base / f"{stem}.{extension}")
             video_dir = out_path.parent
 
-            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()  # type: ignore[arg-type]
             if len(frames) == 1 and audio_path and loop_still_to_audio:
                 dur = _probe_audio_duration(ffmpeg_exe, audio_path)
                 if dur and dur > 0:
@@ -849,7 +858,7 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SaveVideo": "Save Video & Frames (Dehypnotic)",
+    "SaveVideo": "Save Video / Frames (Dehypnotic)",
 }
 
 
