@@ -200,7 +200,7 @@ def save_single_image(
 # Node
 # -----------------------------------------------------------------------------#
 
-class SaveImageMultiFormat:
+class SaveImages:
     """
     Lagrer bilder til disk i flere formater med sekvensiell navngiving.
     Kan embedde workflow (PNG/WEBP) og PNG preview-thumbnail.
@@ -455,9 +455,9 @@ class SaveImageMultiFormat:
 
 # Registrering i ComfyUI
 NODE_CLASS_MAPPINGS = {
-    "SaveImageMultiFormat": SaveImageMultiFormat,
+    "SaveImages": SaveImages,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SaveImageMultiFormat": "Save Images (Dehypnotic)",
+    "SaveImages": "Save Images (Dehypnotic)",
 }

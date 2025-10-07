@@ -1,5 +1,5 @@
-# save_video_simple.py
-# ComfyUI node: Save Video (simple, imageio-ffmpeg, audio as input w/ auto SR)
+# save_video.py
+# ComfyUI node: Save Video (imageio-ffmpeg, audio as input w/ auto SR)
 #
 # - Inputs: images (IMAGE), optional audio (AUDIO)
 # - Containers/codecs configurable (mp4/mkv/webm/mov with h264/h265/vp9/av1/prores/dnxhr)
@@ -357,7 +357,7 @@ def _build_cmd(ffmpeg_exe: str, w: int, h: int, fps: int,
 
 # --------------------------- node ---------------------------
 
-class SaveVideoSimple:
+class SaveVideo:
     """
     Save Video (simple) â€” minimal kontroller, audio som direkte input.
     """
@@ -615,9 +615,9 @@ class SaveVideoSimple:
                 if dur and dur > 0:
                     total_frames = int(math.ceil(dur * fps))
                     if show_progress:
-                        print(f"[SaveVideoSimple] Looping single frame for {dur:.2f}s -> {total_frames} frames @ {fps} fps")
+                        print(f"[SaveVideo] Looping single frame for {dur:.2f}s -> {total_frames} frames @ {fps} fps")
                 elif show_progress:
-                    print("[SaveVideoSimple] Could not read audio duration; using single frame only.")
+                    print("[SaveVideo] Could not read audio duration; using single frame only.")
 
             h, w, _ = frames[0].shape
             cmd = _build_cmd(
@@ -628,12 +628,12 @@ class SaveVideoSimple:
 
             if show_progress:
                 try:
-                    print(f"[SaveVideoSimple] Output base: {base.resolve()}")
+                    print(f"[SaveVideo] Output base: {base.resolve()}")
                 except Exception:
-                    print(f"[SaveVideoSimple] Output base: {base}")
-                print(f"[SaveVideoSimple] Container: {container_key} | Codec: {codec_key}")
-                print(f"[SaveVideoSimple] -> {out_path}")
-                print(f"[SaveVideoSimple] FFmpeg: {' '.join(cmd)}")
+                    print(f"[SaveVideo] Output base: {base}")
+                print(f"[SaveVideo] Container: {container_key} | Codec: {codec_key}")
+                print(f"[SaveVideo] -> {out_path}")
+                print(f"[SaveVideo] FFmpeg: {' '.join(cmd)}")
 
             proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE, text=False)
 
@@ -645,7 +645,7 @@ class SaveVideoSimple:
                         proc.stdin.write(buf)
                         if show_progress and (i + 1) % step == 0:
                             pct = 100.0 * (i + 1) / total_frames
-                            print(f"[SaveVideoSimple] {i+1}/{total_frames} ({pct:5.1f}%)")
+                            print(f"[SaveVideo] {i+1}/{total_frames} ({pct:5.1f}%)")
                 else:
                     total = len(frames)
                     step = max(1, total // 50)
@@ -653,7 +653,7 @@ class SaveVideoSimple:
                         proc.stdin.write(f.tobytes())
                         if show_progress and (i % step == 0):
                             pct = 100.0 * i / total
-                            print(f"[SaveVideoSimple] {i}/{total} ({pct:5.1f}%)")
+                            print(f"[SaveVideo] {i}/{total} ({pct:5.1f}%)")
             finally:
                 try:
                     if proc.stdin:
@@ -699,21 +699,21 @@ class SaveVideoSimple:
                 video_path_str = str(out_path)
 
             if show_progress:
-                print(f"[SaveVideoSimple] Done: {video_path_str} ({out_size} bytes)")
+                print(f"[SaveVideo] Done: {video_path_str} ({out_size} bytes)")
                 try:
                     entries = sorted([p.name for p in Path(video_dir).iterdir()])
                     preview_list = ', '.join(entries[:20])
                     more = '' if len(entries) <= 20 else f" (+{len(entries)-20} more)"
-                    print(f"[SaveVideoSimple] Dir list ({video_dir}): {preview_list}{more}")
+                    print(f"[SaveVideo] Dir list ({video_dir}): {preview_list}{more}")
                 except Exception:
                     pass
         else:
             if show_progress:
                 try:
-                    print(f"[SaveVideoSimple] Output base: {base.resolve()}")
+                    print(f"[SaveVideo] Output base: {base.resolve()}")
                 except Exception:
-                    print(f"[SaveVideoSimple] Output base: {base}")
-                print("[SaveVideoSimple] Save mode: frames only")
+                    print(f"[SaveVideo] Output base: {base}")
+                print("[SaveVideo] Save mode: frames only")
 
         def _parse_frame_selection(spec: str, total: int) -> List[int]:
             s = (spec or "").strip()
@@ -757,7 +757,7 @@ class SaveVideoSimple:
                 target_folder.mkdir(parents=True, exist_ok=True)
 
                 if show_progress:
-                    print(f"[SaveVideoSimple] Saving frames -> {target_folder} | select='{frames_select}' -> {len(idxs)} frames")
+                    print(f"[SaveVideo] Saving frames -> {target_folder} | select='{frames_select}' -> {len(idxs)} frames")
 
                 try:
                     import imageio.v2 as imageio  # type: ignore
@@ -780,7 +780,7 @@ class SaveVideoSimple:
                         pass
                 frames_saved_path = target_folder
             elif show_progress and save_frames:
-                print(f"[SaveVideoSimple] Frame export skipped (selection '{frames_select}').")
+                print(f"[SaveVideo] Frame export skipped (selection '{frames_select}').")
 
         ui_seq_images = []
         imageio = None
@@ -845,11 +845,11 @@ class SaveVideoSimple:
         return {"ui": ui, "result": (images, abs_path,)}
 
 NODE_CLASS_MAPPINGS = {
-    "SaveVideoSimple": SaveVideoSimple,
+    "SaveVideo": SaveVideo,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SaveVideoSimple": "Save Video & Frames (Dehypnotic)",
+    "SaveVideo": "Save Video & Frames (Dehypnotic)",
 }
 
 
