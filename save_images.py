@@ -455,9 +455,9 @@ class SaveImages:
 
 # Registrering i ComfyUI
 NODE_CLASS_MAPPINGS = {
-    "SaveImages": SaveImages,
+    "SaveImagesDehypnotic": SaveImages,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SaveImages": "Save Images (Dehypnotic)",
+    "SaveImagesDehypnotic": "Save Images (Dehypnotic)",
 }

@@ -854,11 +854,11 @@ class SaveVideo:
         return {"ui": ui, "result": (images, abs_path,)}
 
 NODE_CLASS_MAPPINGS = {
-    "SaveVideo": SaveVideo,
+    "SaveVideoDehypnotic": SaveVideo,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SaveVideo": "Save Video and Frames (Dehypnotic)",
+    "SaveVideoDehypnotic": "Save Video & Frames (Dehypnotic)",
 }
 
 
