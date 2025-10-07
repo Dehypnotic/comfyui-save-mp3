@@ -858,7 +858,7 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SaveVideo": "Save Video / Frames (Dehypnotic)",
+    "SaveVideo": "Save Video and Frames (Dehypnotic)",
 }
 
 
